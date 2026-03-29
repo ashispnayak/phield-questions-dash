@@ -1,0 +1,80 @@
+[
+  {
+    "id": "dt2b4d6e8-2233-4e2b-b222-8c2d3e4f5a92",
+    "question": "What percentage of runs in the last 3 overs came from boundaries?",
+    "createdAt": "2026-03-29T00:00:00.000Z",
+    "option1": "0-25%",
+    "option2": "26-50%",
+    "option3": "51-75%",
+    "option4": "76-100%",
+    "overNumber": 0,
+    "isExpired": false,
+    "correctOption": null,
+    "innings": 1
+  },
+  {
+    "id": "dt5e7a9b2-5566-4b5e-e555-5f5a6b7c8d95",
+    "question": "In the last 3 overs, how many balls resulted in scoring shots (non-dot)?",
+    "createdAt": "2026-03-29T00:00:00.000Z",
+    "option1": "0-4",
+    "option2": "4-6",
+    "option3": "7-10",
+    "option4": "11+",
+    "overNumber": 0,
+    "isExpired": false,
+    "correctOption": null,
+    "innings": 1
+  },
+  {
+    "id": "dt6f8b1c3-6677-4c6f-f666-4a6b7c8d9e96",
+    "question": "Which type of runs dominated in the last 2 overs?",
+    "createdAt": "2026-03-29T00:00:00.000Z",
+    "option1": "Boundaries",
+    "option2": "Running (1s & 2s)",
+    "option3": "Extras",
+    "option4": "Equal mix",
+    "overNumber": 0,
+    "isExpired": false,
+    "correctOption": null,
+    "innings": 1
+  },
+  {
+    "id": "dt9c2e4f6-9900-4f9c-c999-1d9e0f1a2b99",
+    "question": "What was the strike rate of the batting team in the last over?",
+    "createdAt": "2026-03-29T00:00:00.000Z",
+    "option1": "Below 100",
+    "option2": "100-150",
+    "option3": "150-200",
+    "option4": "200+",
+    "overNumber": 0,
+    "isExpired": false,
+    "correctOption": null,
+    "innings": 1
+  },
+  {
+    "id": "dt0d3f5a7-1011-4a0d-d000-0e0f1a2b3c90",
+    "question": "In the last 2 overs, how many were dot balls?",
+    "createdAt": "2026-03-29T00:00:00.000Z",
+    "option1": "0",
+    "option2": "3",
+    "option3": "5",
+    "option4": "6",
+    "overNumber": 0,
+    "isExpired": false,
+    "correctOption": null,
+    "innings": 1
+  },
+  {
+    "id": "dt19c1d2e-9090-4f9c-c999-1d9e0f1a2999",
+    "question": "In the last 2 overs, what was the average runs per ball?",
+    "createdAt": "2026-03-29T00:00:00.000Z",
+    "option1": "Below 1",
+    "option2": "1-1.5",
+    "option3": "1.5-2",
+    "option4": "2+",
+    "overNumber": 0,
+    "isExpired": false,
+    "correctOption": null,
+    "innings": 1
+  }
+]

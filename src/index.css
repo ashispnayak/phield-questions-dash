@@ -1,0 +1,121 @@
+body {
+  margin: 0;
+  font-family: system-ui;
+  background: #020C1B;
+  color: white;
+}
+
+/* CONTAINER */
+.app-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 16px;
+}
+
+/* HEADER */
+.header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.logo-text {
+  font-size: 36px;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.subtitle {
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* TOGGLE */
+.toggle {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+/* CARD */
+.card {
+  background: #0f1c2e;
+  padding: 20px;
+  border-radius: 12px;
+  border: 1px solid #1f2a3a;
+  margin-bottom: 20px;
+}
+
+/* INPUT */
+.input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  background: #020c1b;
+  border: 1px solid #1f2a3a;
+  border-radius: 8px;
+  color: white;
+}
+
+/* QUESTION */
+.question {
+  text-align: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* OPTIONS */
+.options {
+  text-align: center;
+  color: #94a3b8;
+  margin-top: 10px;
+}
+
+/* BUTTON ROW */
+.btn-row {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.btn-row.center {
+  justify-content: center;
+}
+
+/* BUTTONS */
+button {
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-success {
+  background: #22c55e;
+  color: white;
+}
+
+.btn-primary {
+  background: #1f2937;
+  color: white;
+}
+
+.btn-primary.active {
+  border: 1px solid #3b82f6;
+}
+
+.btn-secondary {
+  background: #374151;
+  color: white;
+}
+
+.btn-edit {
+  background: #2563eb;
+  color: white;
+}
+
+.btn-danger {
+  background: transparent;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
