@@ -6,6 +6,7 @@ export default function App() {
   const [mode, setMode] = useState("general");
   const [questions, setQuestions] = useState([]);
   const [editingIndex, setEditingIndex] = useState(null);
+  const [search, setSearch] = useState("");
 
   const [form, setForm] = useState({
     question: "",
@@ -79,6 +80,19 @@ export default function App() {
     saveData(questions.filter((_, i) => i !== index));
   };
 
+  // 🔍 SEARCH FILTER
+  const filteredQuestions = questions.filter((q) => {
+    const text = search.toLowerCase();
+
+    return (
+      q.question?.toLowerCase().includes(text) ||
+      q.option1?.toLowerCase().includes(text) ||
+      q.option2?.toLowerCase().includes(text) ||
+      q.option3?.toLowerCase().includes(text) ||
+      q.option4?.toLowerCase().includes(text)
+    );
+  });
+
   return (
     <div className="app-container">
 
@@ -90,6 +104,17 @@ export default function App() {
         <button className="btn-success" onClick={handleAdd}>
           + Add Question
         </button>
+      </div>
+
+      {/* 🔍 SEARCH BAR */}
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search questions..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="search-input"
+        />
       </div>
 
       {/* TOGGLE */}
@@ -145,7 +170,7 @@ export default function App() {
       )}
 
       {/* QUESTIONS */}
-      {questions.map((q, index) => {
+      {filteredQuestions.map((q, index) => {
         const isEditing = editingIndex === index;
 
         return (

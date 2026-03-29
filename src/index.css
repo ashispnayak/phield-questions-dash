@@ -119,3 +119,25 @@ button {
   color: #ef4444;
   border: 1px solid #ef4444;
 }
+
+/* SEARCH */
+.search-container {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 400px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #1f2a3a;
+  background: #020c1b;
+  color: white;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: #64748b;
+}
