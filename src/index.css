@@ -12,10 +12,19 @@ body {
   padding: 40px 16px;
 }
 
+
+
 /* HEADER */
 .header {
   text-align: center;
   margin-bottom: 40px;
+}
+
+.header-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
 }
 
 .logo-text {
