@@ -6,7 +6,6 @@ const BASE_URL = "https://tableplay-319702317581.asia-south1.run.app/v1";
 // ─── EXTRACTED QUESTION FORM ───────────────────────────────────────────────
 const QuestionForm = ({ form, setForm, onSave, onCancel }) => (
   <>
-    {/* NEW: Question Type Selector */}
     <select
       className="input"
       style={{ fontWeight: "bold", color: "#60a5fa" }}
@@ -108,6 +107,11 @@ export default function App() {
   const [addToMatchGameId, setAddToMatchGameId] = useState("");
   const [addToMatchLoading, setAddToMatchLoading] = useState(false);
 
+  // NEW: State for adding a match
+  const [isAddingMatch, setIsAddingMatch] = useState(false);
+  const [newMatchName, setNewMatchName] = useState("");
+  const [addingMatchLoading, setAddingMatchLoading] = useState(false);
+
   const [form, setForm] = useState({
     id: null,
     question: "",
@@ -118,7 +122,7 @@ export default function App() {
     over: "",
     innings: "",
     correctOption: null,
-    questionType: "PREDICTION", // New state field
+    questionType: "PREDICTION",
   });
 
   // ─── FETCH GAMES ──────────────────────────────────────────────────────────
@@ -127,10 +131,14 @@ export default function App() {
       const res = await fetch(`${BASE_URL}/games/`);
       const result = await res.json();
       const data = result.data || result;
+      
       setGames(
         data
-          .filter((g) => g.id !== SAMPLE_GAME_ID)
-          .map((g) => ({ id: g.id, name: g.name }))
+          .map((g) => ({ 
+            id: g.id || g.gameId || g._id, 
+            name: g.name || g.gameName || g.title 
+          }))
+          .filter((g) => g.id && g.id !== SAMPLE_GAME_ID)
       );
     } catch (err) {
       console.error("fetchGames error:", err);
@@ -156,10 +164,9 @@ export default function App() {
           option2: q.option2 || "",
           option3: q.option3 || "",
           option4: q.option4 || "",
-          correctOption: q.correctOption ? Number(q.correctOption) : null,
+          correctOption: q.correctOption !== null ? Number(q.correctOption) : null,
           over: Number(q.overNumber),
           innings: Number(q.innings),
-          // Store the actual type from the DB so it maps correctly when editing
           questionType: q.questionType?.toUpperCase() || "PREDICTION", 
         }))
       );
@@ -171,7 +178,6 @@ export default function App() {
     }
   };
 
-  // FIX: Fetch games once on initial load so they are always ready for "Add to match"
   useEffect(() => {
     fetchGames();
   }, []);
@@ -197,7 +203,31 @@ export default function App() {
     );
   });
 
-  // ─── ADD ──────────────────────────────────────────────────────────────────
+  // ─── ADD MATCH (NEW) ──────────────────────────────────────────────────────
+  const handleAddMatch = async () => {
+    if (!newMatchName.trim()) return alert("Match name is required.");
+    setAddingMatchLoading(true);
+    try {
+      const res = await fetch(`${BASE_URL}/games/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newMatchName.trim() }),
+      });
+      if (!res.ok) throw new Error("Failed to add match");
+      
+      alert("Match added successfully!");
+      setNewMatchName("");
+      setIsAddingMatch(false);
+      await fetchGames(); // Re-fetch the list so the new match shows up immediately
+    } catch (err) {
+      console.error("handleAddMatch error:", err);
+      alert("Failed to create match");
+    } finally {
+      setAddingMatchLoading(false);
+    }
+  };
+
+  // ─── ADD QUESTION ──────────────────────────────────────────────────────────
   const handleAdd = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
     setEditingId("new");
@@ -211,44 +241,41 @@ export default function App() {
       over: "",
       innings: "",
       correctOption: null,
-      // Default to the current tab you are looking at
       questionType: mode.toUpperCase(), 
     });
   };
 
-  // ─── EDIT ─────────────────────────────────────────────────────────────────
+  // ─── EDIT QUESTION ─────────────────────────────────────────────────────────
   const handleEdit = (q) => {
     setEditingId(q.id); 
     setForm({ ...q });
   };
 
-  // ─── SAVE (POST / PUT) ────────────────────────────────────────────────────
+  // ─── SAVE QUESTION (POST / PUT) ───────────────────────────────────────────
   const handleSave = async () => {
     if (!form.question.trim()) return alert("Question is required");
     if (!form.over) return alert("Please select an over");
     if (!form.innings) return alert("Please select innings");
 
-    const finalCorrectOption = form.correctOption ? form.correctOption : null;
+    const finalCorrectOption = form.correctOption !== null ? form.correctOption : null;
 
     try {
       if (editingId === "new") {
-        // POST API: Using exactly the schema you provided
         const res = await fetch(`${BASE_URL}/questions/`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            question: form.question, // Updated to "question" per your schema
+            question: form.question, 
             overNumber: form.over,
             options: [form.option1, form.option2, form.option3, form.option4].filter(Boolean),
             gameId: gameId || SAMPLE_GAME_ID,
             innings: form.innings,
-            questionType: form.questionType, // Sends the value selected in the dropdown
+            questionType: form.questionType, 
             correctOption: finalCorrectOption,
           }),
         });
         if (!res.ok) throw new Error("POST failed");
       } else {
-        // PUT API
         const res = await fetch(`${BASE_URL}/questions/${form.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -261,7 +288,7 @@ export default function App() {
             overNumber: form.over,
             gameId: gameId || SAMPLE_GAME_ID,
             innings: form.innings,
-            questionType: form.questionType, // Sends the value selected in the dropdown
+            questionType: form.questionType, 
             correctOption: finalCorrectOption,
           }),
         });
@@ -276,7 +303,7 @@ export default function App() {
     }
   };
 
-  // ─── DELETE ───────────────────────────────────────────────────────────────
+  // ─── DELETE QUESTION ──────────────────────────────────────────────────────
   const handleDelete = (id) => {
     if (!window.confirm("Delete this question?")) return;
     setQuestions(questions.filter((q) => q.id !== id));
@@ -287,19 +314,19 @@ export default function App() {
     if (!addToMatchGameId) return alert("Please select a match");
     setAddToMatchLoading(true);
     
-    const finalCorrectOption = q.correctOption ? q.correctOption : null;
+    const finalCorrectOption = q.correctOption !== null ? q.correctOption : null;
 
     try {
       const res = await fetch(`${BASE_URL}/questions/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          question: q.question, // Updated to "question" per your schema
+          question: q.question, 
           overNumber: q.over,
           options: [q.option1, q.option2, q.option3, q.option4].filter(Boolean),
-          gameId: addToMatchGameId,
+          gameId: addToMatchGameId, 
           innings: q.innings,
-          questionType: q.questionType, // Preserves the original type 
+          questionType: q.questionType, 
           correctOption: finalCorrectOption,
         }),
       });
@@ -349,7 +376,7 @@ export default function App() {
     );
   }
 
-  // ─── MATCH — game picker ───────────────────────────────────────────────────
+  // ─── MATCH — GAME PICKER ──────────────────────────────────────────────────
   if (screen === "match" && !gameId) {
     return (
       <div className="app-container">
@@ -357,12 +384,57 @@ export default function App() {
           <h1 className="logo-text">Select Match</h1>
           <button
             className="btn-secondary"
-            onClick={() => setScreen("home")}
+            onClick={() => {
+              setScreen("home");
+              setIsAddingMatch(false);
+            }}
           >
             ⬅ Back
           </button>
         </div>
 
+        {/* NEW: ADD MATCH CARD */}
+        <div className="card" style={{ marginBottom: "20px" }}>
+          {!isAddingMatch ? (
+            <button 
+              className="btn-success full-width" 
+              onClick={() => setIsAddingMatch(true)}
+            >
+              ➕ Create New Match
+            </button>
+          ) : (
+            <div>
+              <p className="card-label" style={{ marginBottom: "8px" }}>New Match Name</p>
+              <input
+                className="input"
+                placeholder="e.g., India vs Australia"
+                value={newMatchName}
+                onChange={(e) => setNewMatchName(e.target.value)}
+                autoFocus
+              />
+              <div className="btn-row">
+                <button
+                  className="btn-success"
+                  onClick={handleAddMatch}
+                  disabled={addingMatchLoading}
+                >
+                  {addingMatchLoading ? "Saving..." : "Save Match"}
+                </button>
+                <button
+                  className="btn-secondary"
+                  onClick={() => {
+                    setIsAddingMatch(false);
+                    setNewMatchName("");
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* GAMES LIST */}
         {games.length === 0 ? (
           <div className="card">
             <p style={{ color: "#94a3b8", textAlign: "center" }}>
@@ -401,7 +473,8 @@ export default function App() {
           )}
         </div>
 
-        <div className="header-actions">
+        {/* Inline CSS spacing applied directly to the header-actions div */}
+        <div className="header-actions" style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "16px" }}>
           <button className="btn-success" onClick={handleAdd}>
             + Add Question
           </button>

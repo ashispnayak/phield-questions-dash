@@ -150,3 +150,29 @@ button {
 .search-input::placeholder {
   color: #64748b;
 }
+
+/* MATCH LIST CONTAINER */
+.game-list {
+  display: flex;
+  flex-wrap: wrap; /* Allows buttons to wrap to the next line if there are many */
+  gap: 12px; /* This adds the exact spacing you want! */
+  margin-top: 10px;
+}
+
+/* MATCH ITEM BUTTONS (Optional, if you want to refine their look) */
+.game-item {
+  background: white;
+  color: #020c1b;
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.game-item:hover {
+  background: #f1f5f9;
+}
