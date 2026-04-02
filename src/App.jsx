@@ -164,7 +164,8 @@ export default function App() {
           option2: q.option2 || "",
           option3: q.option3 || "",
           option4: q.option4 || "",
-          correctOption: q.correctOption !== null ? Number(q.correctOption) : null,
+          // TRANSLATION 1: Convert API's 0-based index to UI's 1-based index
+          correctOption: q.correctOption !== null ? Number(q.correctOption) + 1 : null,
           over: Number(q.overNumber),
           innings: Number(q.innings),
           questionType: q.questionType?.toUpperCase() || "PREDICTION", 
@@ -257,7 +258,8 @@ export default function App() {
     if (!form.over) return alert("Please select an over");
     if (!form.innings) return alert("Please select innings");
 
-    const finalCorrectOption = form.correctOption !== null ? form.correctOption : null;
+    // TRANSLATION 2: Convert UI's 1-based index back to API's 0-based index
+    const finalCorrectOption = form.correctOption !== null ? form.correctOption - 1 : null;
 
     try {
       if (editingId === "new") {
@@ -314,7 +316,8 @@ export default function App() {
     if (!addToMatchGameId) return alert("Please select a match");
     setAddToMatchLoading(true);
     
-    const finalCorrectOption = q.correctOption !== null ? q.correctOption : null;
+    // TRANSLATION 3: Convert the 1-based mapped question back to 0-based for the POST request
+    const finalCorrectOption = q.correctOption !== null ? q.correctOption - 1 : null;
 
     try {
       const res = await fetch(`${BASE_URL}/questions/`, {
