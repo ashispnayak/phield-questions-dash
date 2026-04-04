@@ -110,6 +110,8 @@ export default function App() {
   // NEW: State for adding a match
   const [isAddingMatch, setIsAddingMatch] = useState(false);
   const [newMatchName, setNewMatchName] = useState("");
+  // CHANGED: Added state for Sportsmonk ID
+  const [newMatchSportsMonkId, setNewMatchSportsMonkId] = useState("");
   const [addingMatchLoading, setAddingMatchLoading] = useState(false);
 
   const [form, setForm] = useState({
@@ -136,7 +138,9 @@ export default function App() {
         data
           .map((g) => ({ 
             id: g.id || g.gameId || g._id, 
-            name: g.name || g.gameName || g.title 
+            name: g.name || g.gameName || g.title,
+            // CHANGED: Extract game code from API response
+            code: g.code || g.gameCode
           }))
           .filter((g) => g.id && g.id !== SAMPLE_GAME_ID)
       );
@@ -207,17 +211,24 @@ export default function App() {
   // ─── ADD MATCH (NEW) ──────────────────────────────────────────────────────
   const handleAddMatch = async () => {
     if (!newMatchName.trim()) return alert("Match name is required.");
+    if (!newMatchSportsMonkId.trim()) return alert("Sportsmonk ID is required.");
+    
     setAddingMatchLoading(true);
     try {
+      // CHANGED: Include sportsMonkId in payload (as an integer)
       const res = await fetch(`${BASE_URL}/games/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newMatchName.trim() }),
+        body: JSON.stringify({ 
+          name: newMatchName.trim(),
+          sportsMonkId: parseInt(newMatchSportsMonkId, 10)
+        }),
       });
       if (!res.ok) throw new Error("Failed to add match");
       
       alert("Match added successfully!");
       setNewMatchName("");
+      setNewMatchSportsMonkId("");
       setIsAddingMatch(false);
       await fetchGames(); // Re-fetch the list so the new match shows up immediately
     } catch (err) {
@@ -306,9 +317,22 @@ export default function App() {
   };
 
   // ─── DELETE QUESTION ──────────────────────────────────────────────────────
-  const handleDelete = (id) => {
+  // CHANGED: Calling the DELETE API instead of just local filtering
+  const handleDelete = async (id) => {
     if (!window.confirm("Delete this question?")) return;
-    setQuestions(questions.filter((q) => q.id !== id));
+    
+    try {
+      const res = await fetch(`${BASE_URL}/questions/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Delete failed");
+      
+      // Remove locally to save a re-fetch, keeping UI snappy
+      setQuestions(questions.filter((q) => q.id !== id));
+    } catch (err) {
+      console.error("handleDelete error:", err);
+      alert("Failed to delete question from server");
+    }
   };
 
   // ─── ADD TO MATCH ─────────────────────────────────────────────────────────
@@ -396,7 +420,7 @@ export default function App() {
           </button>
         </div>
 
-        {/* NEW: ADD MATCH CARD */}
+        {/* ADD MATCH CARD */}
         <div className="card" style={{ marginBottom: "20px" }}>
           {!isAddingMatch ? (
             <button 
@@ -415,7 +439,18 @@ export default function App() {
                 onChange={(e) => setNewMatchName(e.target.value)}
                 autoFocus
               />
-              <div className="btn-row">
+
+              {/* CHANGED: Added Sportsmonk ID Input */}
+              <p className="card-label" style={{ marginBottom: "8px", marginTop: "12px" }}>Sportsmonk ID</p>
+              <input
+                className="input"
+                type="number"
+                placeholder="e.g., 12345"
+                value={newMatchSportsMonkId}
+                onChange={(e) => setNewMatchSportsMonkId(e.target.value)}
+              />
+
+              <div className="btn-row" style={{ marginTop: "16px" }}>
                 <button
                   className="btn-success"
                   onClick={handleAddMatch}
@@ -428,6 +463,7 @@ export default function App() {
                   onClick={() => {
                     setIsAddingMatch(false);
                     setNewMatchName("");
+                    setNewMatchSportsMonkId("");
                   }}
                 >
                   Cancel
@@ -464,7 +500,10 @@ export default function App() {
 
   // ─── MAIN VIEW ────────────────────────────────────────────────────────────
   const isSample = screen === "sample";
-  const currentGameName = games.find((g) => g.id === gameId)?.name || "";
+  // CHANGED: Identify the current game object to extract name and code
+  const currentGame = games.find((g) => g.id === gameId);
+  const currentGameName = currentGame?.name || "";
+  const currentGameCode = currentGame?.code || "";
 
   return (
     <div className="app-container">
@@ -472,11 +511,18 @@ export default function App() {
         <div>
           <h1 className="logo-text">phield</h1>
           {!isSample && currentGameName && (
-            <p className="subtitle">{currentGameName}</p>
+            <div style={{ marginTop: "4px" }}>
+              <p className="subtitle" style={{ margin: 0 }}>{currentGameName}</p>
+              {/* CHANGED: Conditionally display Game Code if it exists */}
+              {currentGameCode && (
+                <p className="subtitle" style={{ fontSize: "12px", marginTop: "4px", color: "#60a5fa" }}>
+                  Game Code: {currentGameCode}
+                </p>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Inline CSS spacing applied directly to the header-actions div */}
         <div className="header-actions" style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "16px" }}>
           <button className="btn-success" onClick={handleAdd}>
             + Add Question
