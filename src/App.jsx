@@ -98,7 +98,7 @@ const QuestionForm = ({ form, setForm, onSave, onCancel }) => (
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [mode, setMode] = useState("prediction"); 
-  const [inningsFilter, setInningsFilter] = useState("ALL"); // NEW: Innings filter state
+  const [inningsFilter, setInningsFilter] = useState("ALL"); 
   const [questions, setQuestions] = useState([]);
   const [search, setSearch] = useState("");
   const [gameId, setGameId] = useState("");
@@ -106,7 +106,7 @@ export default function App() {
   const [editingId, setEditingId] = useState(null); 
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [statusLoading, setStatusLoading] = useState(false); // NEW: Match status toggle loading
+  const [statusLoading, setStatusLoading] = useState(false); 
 
   const [addToMatchId, setAddToMatchId] = useState(null);
   const [addToMatchGameId, setAddToMatchGameId] = useState("");
@@ -143,7 +143,7 @@ export default function App() {
             id: g.id || g.gameId || g._id, 
             name: g.name || g.gameName || g.title,
             code: g.code || g.gameCode,
-            isActive: g.isActive !== false // NEW: Extract isActive status (default to true if missing)
+            isActive: g.isActive !== false 
           }))
           .filter((g) => g.id && g.id !== SAMPLE_GAME_ID)
       );
@@ -164,18 +164,21 @@ export default function App() {
       const data = result.data || result;
 
       setQuestions(
-        data.map((q) => ({
-          id: q.id,
-          question: q.question,
-          option1: q.option1 || "",
-          option2: q.option2 || "",
-          option3: q.option3 || "",
-          option4: q.option4 || "",
-          correctOption: q.correctOption !== null ? Number(q.correctOption) + 1 : null,
-          over: Number(q.overNumber),
-          innings: Number(q.innings),
-          questionType: q.questionType?.toUpperCase() || "PREDICTION", 
-        }))
+        data
+          // NEW: Filter out soft-deleted questions before mapping
+          .filter((q) => q.isDeleted !== true)
+          .map((q) => ({
+            id: q.id,
+            question: q.question,
+            option1: q.option1 || "",
+            option2: q.option2 || "",
+            option3: q.option3 || "",
+            option4: q.option4 || "",
+            correctOption: q.correctOption !== null ? Number(q.correctOption) + 1 : null,
+            over: Number(q.overNumber),
+            innings: Number(q.innings),
+            questionType: q.questionType?.toUpperCase() || "PREDICTION", 
+          }))
       );
     } catch (err) {
       console.error("fetchQuestions error:", err);
@@ -201,7 +204,6 @@ export default function App() {
   // ─── SEARCH, FILTER & SORT ────────────────────────────────────────────────
   const filteredQuestions = questions
     .filter((q) => {
-      // 1. Search text match
       const textMatch = 
         (q.question || "").toLowerCase().includes(search.toLowerCase()) ||
         (q.option1 || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -209,15 +211,13 @@ export default function App() {
         (q.option3 || "").toLowerCase().includes(search.toLowerCase()) ||
         (q.option4 || "").toLowerCase().includes(search.toLowerCase());
       
-      // 2. Innings match (NEW)
       const inningsMatch = inningsFilter === "ALL" || q.innings === inningsFilter;
 
       return textMatch && inningsMatch;
     })
-    // 3. Sort by over number ascending (NEW)
     .sort((a, b) => (a.over || 0) - (b.over || 0));
 
-  // ─── TOGGLE MATCH STATUS (NEW) ────────────────────────────────────────────
+  // ─── TOGGLE MATCH STATUS ──────────────────────────────────────────────────
   const handleToggleMatchStatus = async () => {
     const currentGame = games.find((g) => g.id === gameId);
     if (!currentGame) return;
@@ -233,7 +233,6 @@ export default function App() {
       });
       if (!res.ok) throw new Error("Failed to toggle match status");
 
-      // Update local state immediately to avoid full re-fetch
       setGames((prevGames) => 
         prevGames.map(g => g.id === gameId ? { ...g, isActive: newStatus } : g)
       );
@@ -561,7 +560,6 @@ export default function App() {
         </div>
 
         <div className="header-actions">
-          {/* NEW: Match Status Toggle Button */}
           {!isSample && currentGame && (
             <button
               className={`btn-status ${currentGame.isActive === false ? 'expired' : 'active'}`}
@@ -583,7 +581,7 @@ export default function App() {
               setGameId("");
               setEditingId(null);
               setQuestions([]);
-              setInningsFilter("ALL"); // Reset filter on back
+              setInningsFilter("ALL"); 
             }}
           >
             ⬅ Back
@@ -604,7 +602,6 @@ export default function App() {
         </div>
 
         <div className="filter-controls-wrapper">
-          {/* NEW: Innings Filter */}
           <div className="toggle-group">
             <button
               className={`toggle-btn ${inningsFilter === "ALL" ? "active" : ""}`}
