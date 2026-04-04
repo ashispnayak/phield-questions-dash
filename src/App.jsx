@@ -5,52 +5,78 @@ const BASE_URL = "https://tableplay-319702317581.asia-south1.run.app/v1";
 
 // ─── EXTRACTED QUESTION FORM ───────────────────────────────────────────────
 const QuestionForm = ({ form, setForm, onSave, onCancel }) => (
-  <>
-    <select
-      className="input"
-      style={{ fontWeight: "bold", color: "#60a5fa" }}
-      value={form.questionType}
-      onChange={(e) => setForm({ ...form, questionType: e.target.value })}
-    >
-      <option value="PREDICTION">Prediction (Over)</option>
-      <option value="TRIVIA">Trivia (Timeout)</option>
-    </select>
-
-    <input
-      className="input"
-      placeholder="Question"
-      value={form.question}
-      onChange={(e) => setForm({ ...form, question: e.target.value })}
-    />
-
-    {[1, 2, 3, 4].map((num) => (
-      <input
-        key={num}
+  <div className="form-container">
+    <div className="form-group row-group">
+      <select
+        className="input select-accent"
+        value={form.questionType}
+        onChange={(e) => setForm({ ...form, questionType: e.target.value })}
+      >
+        <option value="PREDICTION">🎯 Prediction (Over)</option>
+        <option value="TRIVIA">🧠 Trivia (Timeout)</option>
+      </select>
+      
+      <select
         className="input"
-        placeholder={`Option ${num}`}
-        value={form[`option${num}`] || ""}
-        onChange={(e) =>
-          setForm({ ...form, [`option${num}`]: e.target.value })
-        }
-      />
-    ))}
+        value={form.innings || ""}
+        onChange={(e) => setForm({ ...form, innings: Number(e.target.value) })}
+      >
+        <option value="">Select Innings</option>
+        <option value={1}>1st Innings</option>
+        <option value={2}>2nd Innings</option>
+      </select>
 
-    <div className="correct-option-row">
-      <p className="correct-option-label">Correct Option:</p>
-      <div className="radio-group">
+      <select
+        className="input"
+        value={form.over || ""}
+        onChange={(e) => setForm({ ...form, over: Number(e.target.value) })}
+      >
+        <option value="">Select Over</option>
+        {[...Array(20)].map((_, i) => (
+          <option key={i} value={i + 1}>
+            Over {i + 1}
+          </option>
+        ))}
+      </select>
+    </div>
+
+    <div className="form-group">
+      <input
+        className="input input-large"
+        placeholder="What is your question?"
+        value={form.question}
+        onChange={(e) => setForm({ ...form, question: e.target.value })}
+      />
+    </div>
+
+    <div className="options-grid">
+      {[1, 2, 3, 4].map((num) => (
+        <input
+          key={num}
+          className="input"
+          placeholder={`Option ${num}`}
+          value={form[`option${num}`] || ""}
+          onChange={(e) =>
+            setForm({ ...form, [`option${num}`]: e.target.value })
+          }
+        />
+      ))}
+    </div>
+
+    <div className="correct-option-wrapper">
+      <p className="correct-option-label">Select Correct Option:</p>
+      <div className="pill-group">
         {[1, 2, 3, 4].map((num) => (
-          <label key={num} className="radio-label">
-            <input
-              type="radio"
-              checked={form.correctOption === num}
-              onChange={() => setForm({ ...form, correctOption: num })}
-            />
-            {num}
-          </label>
+          <button
+            key={num}
+            className={`option-pill ${form.correctOption === num ? "active" : ""}`}
+            onClick={() => setForm({ ...form, correctOption: num })}
+          >
+            Option {num}
+          </button>
         ))}
         <button 
-          className="btn-danger" 
-          style={{marginLeft: "10px", padding: "2px 6px", fontSize: "12px"}}
+          className="btn-clear-pill" 
           onClick={() => setForm({ ...form, correctOption: null })}
         >
           Clear
@@ -58,43 +84,21 @@ const QuestionForm = ({ form, setForm, onSave, onCancel }) => (
       </div>
     </div>
 
-    <select
-      className="input"
-      value={form.over || ""}
-      onChange={(e) => setForm({ ...form, over: Number(e.target.value) })}
-    >
-      <option value="">Select Over</option>
-      {[...Array(20)].map((_, i) => (
-        <option key={i} value={i + 1}>
-          Over {i + 1}
-        </option>
-      ))}
-    </select>
-
-    <select
-      className="input"
-      value={form.innings || ""}
-      onChange={(e) => setForm({ ...form, innings: Number(e.target.value) })}
-    >
-      <option value="">Select Innings</option>
-      <option value={1}>1st Innings</option>
-      <option value={2}>2nd Innings</option>
-    </select>
-
-    <div className="btn-row">
+    <div className="btn-row form-actions">
       <button className="btn-success" onClick={onSave}>
-        Save
+        Save Question
       </button>
       <button className="btn-secondary" onClick={onCancel}>
         Cancel
       </button>
     </div>
-  </>
+  </div>
 );
 
 export default function App() {
   const [screen, setScreen] = useState("home");
   const [mode, setMode] = useState("prediction"); 
+  const [inningsFilter, setInningsFilter] = useState("ALL"); // NEW: Innings filter state
   const [questions, setQuestions] = useState([]);
   const [search, setSearch] = useState("");
   const [gameId, setGameId] = useState("");
@@ -102,15 +106,14 @@ export default function App() {
   const [editingId, setEditingId] = useState(null); 
   const [games, setGames] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [statusLoading, setStatusLoading] = useState(false); // NEW: Match status toggle loading
 
   const [addToMatchId, setAddToMatchId] = useState(null);
   const [addToMatchGameId, setAddToMatchGameId] = useState("");
   const [addToMatchLoading, setAddToMatchLoading] = useState(false);
 
-  // NEW: State for adding a match
   const [isAddingMatch, setIsAddingMatch] = useState(false);
   const [newMatchName, setNewMatchName] = useState("");
-  // CHANGED: Added state for Sportsmonk ID
   const [newMatchSportsMonkId, setNewMatchSportsMonkId] = useState("");
   const [addingMatchLoading, setAddingMatchLoading] = useState(false);
 
@@ -139,8 +142,8 @@ export default function App() {
           .map((g) => ({ 
             id: g.id || g.gameId || g._id, 
             name: g.name || g.gameName || g.title,
-            // CHANGED: Extract game code from API response
-            code: g.code || g.gameCode
+            code: g.code || g.gameCode,
+            isActive: g.isActive !== false // NEW: Extract isActive status (default to true if missing)
           }))
           .filter((g) => g.id && g.id !== SAMPLE_GAME_ID)
       );
@@ -168,7 +171,6 @@ export default function App() {
           option2: q.option2 || "",
           option3: q.option3 || "",
           option4: q.option4 || "",
-          // TRANSLATION 1: Convert API's 0-based index to UI's 1-based index
           correctOption: q.correctOption !== null ? Number(q.correctOption) + 1 : null,
           over: Number(q.overNumber),
           innings: Number(q.innings),
@@ -196,26 +198,60 @@ export default function App() {
     }
   }, [mode, screen, gameId]);
 
-  // ─── SEARCH ───────────────────────────────────────────────────────────────
-  const filteredQuestions = questions.filter((q) => {
-    const text = search.toLowerCase();
-    return (
-      (q.question || "").toLowerCase().includes(text) ||
-      (q.option1 || "").toLowerCase().includes(text) ||
-      (q.option2 || "").toLowerCase().includes(text) ||
-      (q.option3 || "").toLowerCase().includes(text) ||
-      (q.option4 || "").toLowerCase().includes(text)
-    );
-  });
+  // ─── SEARCH, FILTER & SORT ────────────────────────────────────────────────
+  const filteredQuestions = questions
+    .filter((q) => {
+      // 1. Search text match
+      const textMatch = 
+        (q.question || "").toLowerCase().includes(search.toLowerCase()) ||
+        (q.option1 || "").toLowerCase().includes(search.toLowerCase()) ||
+        (q.option2 || "").toLowerCase().includes(search.toLowerCase()) ||
+        (q.option3 || "").toLowerCase().includes(search.toLowerCase()) ||
+        (q.option4 || "").toLowerCase().includes(search.toLowerCase());
+      
+      // 2. Innings match (NEW)
+      const inningsMatch = inningsFilter === "ALL" || q.innings === inningsFilter;
 
-  // ─── ADD MATCH (NEW) ──────────────────────────────────────────────────────
+      return textMatch && inningsMatch;
+    })
+    // 3. Sort by over number ascending (NEW)
+    .sort((a, b) => (a.over || 0) - (b.over || 0));
+
+  // ─── TOGGLE MATCH STATUS (NEW) ────────────────────────────────────────────
+  const handleToggleMatchStatus = async () => {
+    const currentGame = games.find((g) => g.id === gameId);
+    if (!currentGame) return;
+
+    const newStatus = !currentGame.isActive;
+    setStatusLoading(true);
+
+    try {
+      const res = await fetch(`${BASE_URL}/games/${gameId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      if (!res.ok) throw new Error("Failed to toggle match status");
+
+      // Update local state immediately to avoid full re-fetch
+      setGames((prevGames) => 
+        prevGames.map(g => g.id === gameId ? { ...g, isActive: newStatus } : g)
+      );
+    } catch (err) {
+      console.error("handleToggleMatchStatus error:", err);
+      alert("Failed to update match status");
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
+  // ─── ADD MATCH ────────────────────────────────────────────────────────────
   const handleAddMatch = async () => {
     if (!newMatchName.trim()) return alert("Match name is required.");
     if (!newMatchSportsMonkId.trim()) return alert("Sportsmonk ID is required.");
     
     setAddingMatchLoading(true);
     try {
-      // CHANGED: Include sportsMonkId in payload (as an integer)
       const res = await fetch(`${BASE_URL}/games/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -230,7 +266,7 @@ export default function App() {
       setNewMatchName("");
       setNewMatchSportsMonkId("");
       setIsAddingMatch(false);
-      await fetchGames(); // Re-fetch the list so the new match shows up immediately
+      await fetchGames(); 
     } catch (err) {
       console.error("handleAddMatch error:", err);
       alert("Failed to create match");
@@ -259,6 +295,7 @@ export default function App() {
 
   // ─── EDIT QUESTION ─────────────────────────────────────────────────────────
   const handleEdit = (q) => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
     setEditingId(q.id); 
     setForm({ ...q });
   };
@@ -269,7 +306,6 @@ export default function App() {
     if (!form.over) return alert("Please select an over");
     if (!form.innings) return alert("Please select innings");
 
-    // TRANSLATION 2: Convert UI's 1-based index back to API's 0-based index
     const finalCorrectOption = form.correctOption !== null ? form.correctOption - 1 : null;
 
     try {
@@ -317,9 +353,8 @@ export default function App() {
   };
 
   // ─── DELETE QUESTION ──────────────────────────────────────────────────────
-  // CHANGED: Calling the DELETE API instead of just local filtering
   const handleDelete = async (id) => {
-    if (!window.confirm("Delete this question?")) return;
+    if (!window.confirm("Are you sure you want to delete this question?")) return;
     
     try {
       const res = await fetch(`${BASE_URL}/questions/${id}`, {
@@ -327,7 +362,6 @@ export default function App() {
       });
       if (!res.ok) throw new Error("Delete failed");
       
-      // Remove locally to save a re-fetch, keeping UI snappy
       setQuestions(questions.filter((q) => q.id !== id));
     } catch (err) {
       console.error("handleDelete error:", err);
@@ -340,7 +374,6 @@ export default function App() {
     if (!addToMatchGameId) return alert("Please select a match");
     setAddToMatchLoading(true);
     
-    // TRANSLATION 3: Convert the 1-based mapped question back to 0-based for the POST request
     const finalCorrectOption = q.correctOption !== null ? q.correctOption - 1 : null;
 
     try {
@@ -373,31 +406,33 @@ export default function App() {
   if (screen === "home") {
     return (
       <div className="app-container">
-        <div className="header">
+        <div className="header hero-header">
+          <div className="logo-badge">P</div>
           <h1 className="logo-text">phield</h1>
-          <p className="subtitle">Question Management</p>
+          <p className="subtitle">Admin Control Center</p>
         </div>
 
-        <div className="card">
-          <p className="card-label">Sample Questions</p>
-          <p className="card-desc">Browse and manage the default question bank</p>
-          <button className="btn-success full-width" onClick={() => setScreen("sample")}>
-            📦 Sample Questions
-          </button>
-        </div>
+        <div className="nav-cards">
+          <div className="nav-card" onClick={() => setScreen("sample")}>
+            <div className="nav-icon">📦</div>
+            <div className="nav-content">
+              <h3>Sample Questions</h3>
+              <p>Browse and manage the default global question bank</p>
+            </div>
+            <div className="nav-arrow">→</div>
+          </div>
 
-        <div className="card">
-          <p className="card-label">Match Questions</p>
-          <p className="card-desc">Select a live match and manage its questions</p>
-          <button
-            className="btn-primary full-width"
-            onClick={() => {
+          <div className="nav-card" onClick={() => {
               setGameId("");
               setScreen("match");
-            }}
-          >
-            🎮 Match-wise Questions
-          </button>
+            }}>
+            <div className="nav-icon">🎮</div>
+            <div className="nav-content">
+              <h3>Live Matches</h3>
+              <p>Select a match and manage its specific questions</p>
+            </div>
+            <div className="nav-arrow">→</div>
+          </div>
         </div>
       </div>
     );
@@ -407,10 +442,12 @@ export default function App() {
   if (screen === "match" && !gameId) {
     return (
       <div className="app-container">
-        <div className="header">
-          <h1 className="logo-text">Select Match</h1>
+        <div className="header inline-header">
+          <div className="header-titles">
+            <h1 className="logo-text small">Select Match</h1>
+          </div>
           <button
-            className="btn-secondary"
+            className="btn-outline"
             onClick={() => {
               setScreen("home");
               setIsAddingMatch(false);
@@ -420,37 +457,40 @@ export default function App() {
           </button>
         </div>
 
-        {/* ADD MATCH CARD */}
-        <div className="card" style={{ marginBottom: "20px" }}>
+        <div className="card highlight-card">
           {!isAddingMatch ? (
             <button 
               className="btn-success full-width" 
               onClick={() => setIsAddingMatch(true)}
             >
-              ➕ Create New Match
+              <span className="icon">➕</span> Create New Match
             </button>
           ) : (
-            <div>
-              <p className="card-label" style={{ marginBottom: "8px" }}>New Match Name</p>
-              <input
-                className="input"
-                placeholder="e.g., India vs Australia"
-                value={newMatchName}
-                onChange={(e) => setNewMatchName(e.target.value)}
-                autoFocus
-              />
+            <div className="create-match-form">
+              <h3 className="section-title" style={{marginTop: 0}}>Create Match</h3>
+              <div className="input-group">
+                <label>Match Name</label>
+                <input
+                  className="input"
+                  placeholder="e.g., India vs Australia"
+                  value={newMatchName}
+                  onChange={(e) => setNewMatchName(e.target.value)}
+                  autoFocus
+                />
+              </div>
 
-              {/* CHANGED: Added Sportsmonk ID Input */}
-              <p className="card-label" style={{ marginBottom: "8px", marginTop: "12px" }}>Sportsmonk ID</p>
-              <input
-                className="input"
-                type="number"
-                placeholder="e.g., 12345"
-                value={newMatchSportsMonkId}
-                onChange={(e) => setNewMatchSportsMonkId(e.target.value)}
-              />
+              <div className="input-group">
+                <label>Sportsmonk ID</label>
+                <input
+                  className="input"
+                  type="number"
+                  placeholder="e.g., 12345"
+                  value={newMatchSportsMonkId}
+                  onChange={(e) => setNewMatchSportsMonkId(e.target.value)}
+                />
+              </div>
 
-              <div className="btn-row" style={{ marginTop: "16px" }}>
+              <div className="btn-row">
                 <button
                   className="btn-success"
                   onClick={handleAddMatch}
@@ -473,22 +513,24 @@ export default function App() {
           )}
         </div>
 
-        {/* GAMES LIST */}
         {games.length === 0 ? (
-          <div className="card">
-            <p style={{ color: "#94a3b8", textAlign: "center" }}>
-              Loading matches…
-            </p>
+          <div className="empty-state">
+            <div className="loader"></div>
+            <p>Loading matches…</p>
           </div>
         ) : (
-          <div className="game-list">
+          <div className="game-grid">
             {games.map((g) => (
               <button
                 key={g.id}
                 className="game-item"
                 onClick={() => setGameId(g.id)}
               >
-                <span className="game-name">{g.name}</span>
+                <div className="game-details">
+                  <span className="game-name">{g.name}</span>
+                  {g.code && <span className="game-code">#{g.code}</span>}
+                  <span className={`status-dot ${g.isActive !== false ? 'active' : 'expired'}`}></span>
+                </div>
                 <span className="game-arrow">→</span>
               </button>
             ))}
@@ -500,40 +542,48 @@ export default function App() {
 
   // ─── MAIN VIEW ────────────────────────────────────────────────────────────
   const isSample = screen === "sample";
-  // CHANGED: Identify the current game object to extract name and code
   const currentGame = games.find((g) => g.id === gameId);
   const currentGameName = currentGame?.name || "";
   const currentGameCode = currentGame?.code || "";
 
   return (
     <div className="app-container">
-      <div className="header">
-        <div>
-          <h1 className="logo-text">phield</h1>
+      <div className="header inline-header">
+        <div className="header-titles">
+          <h1 className="logo-text small">phield</h1>
           {!isSample && currentGameName && (
-            <div style={{ marginTop: "4px" }}>
-              <p className="subtitle" style={{ margin: 0 }}>{currentGameName}</p>
-              {/* CHANGED: Conditionally display Game Code if it exists */}
-              {currentGameCode && (
-                <p className="subtitle" style={{ fontSize: "12px", marginTop: "4px", color: "#60a5fa" }}>
-                  Game Code: {currentGameCode}
-                </p>
-              )}
+            <div className="match-badges">
+              <span className="badge badge-primary">{currentGameName}</span>
+              {currentGameCode && <span className="badge badge-secondary">ID: {currentGameCode}</span>}
             </div>
           )}
+          {isSample && <span className="badge badge-primary">Sample Bank</span>}
         </div>
 
-        <div className="header-actions" style={{ display: "flex", justifyContent: "center", gap: "12px", marginTop: "16px" }}>
-          <button className="btn-success" onClick={handleAdd}>
-            + Add Question
+        <div className="header-actions">
+          {/* NEW: Match Status Toggle Button */}
+          {!isSample && currentGame && (
+            <button
+              className={`btn-status ${currentGame.isActive === false ? 'expired' : 'active'}`}
+              onClick={handleToggleMatchStatus}
+              disabled={statusLoading}
+              title="Click to toggle match activity status"
+            >
+              {statusLoading ? "..." : (currentGame.isActive === false ? "🔴 Expired" : "🟢 Active")}
+            </button>
+          )}
+          
+          <button className="btn-primary" onClick={handleAdd}>
+            <span className="icon">➕</span> Add Question
           </button>
           <button
-            className="btn-secondary"
+            className="btn-outline"
             onClick={() => {
               setScreen("home");
               setGameId("");
               setEditingId(null);
               setQuestions([]);
+              setInningsFilter("ALL"); // Reset filter on back
             }}
           >
             ⬅ Back
@@ -541,37 +591,61 @@ export default function App() {
         </div>
       </div>
 
-      {/* SEARCH */}
-      <div className="search-container">
-        <input
-          type="text"
-          placeholder="Search questions…"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="search-input"
-        />
+      <div className="controls-bar">
+        <div className="search-container">
+          <span className="search-icon">🔍</span>
+          <input
+            type="text"
+            placeholder="Search questions…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="search-input"
+          />
+        </div>
+
+        <div className="filter-controls-wrapper">
+          {/* NEW: Innings Filter */}
+          <div className="toggle-group">
+            <button
+              className={`toggle-btn ${inningsFilter === "ALL" ? "active" : ""}`}
+              onClick={() => setInningsFilter("ALL")}
+            >
+              All
+            </button>
+            <button
+              className={`toggle-btn ${inningsFilter === 1 ? "active" : ""}`}
+              onClick={() => setInningsFilter(1)}
+            >
+              1st Inn
+            </button>
+            <button
+              className={`toggle-btn ${inningsFilter === 2 ? "active" : ""}`}
+              onClick={() => setInningsFilter(2)}
+            >
+              2nd Inn
+            </button>
+          </div>
+
+          <div className="toggle-group">
+            <button
+              className={`toggle-btn ${mode === "prediction" ? "active" : ""}`}
+              onClick={() => setMode("prediction")}
+            >
+              🎯 Over
+            </button>
+            <button
+              className={`toggle-btn ${mode === "trivia" ? "active" : ""}`}
+              onClick={() => setMode("trivia")}
+            >
+              🧠 Timeout
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* MODE TOGGLE */}
-      <div className="toggle">
-        <button
-          className={`btn-primary ${mode === "prediction" ? "active" : ""}`}
-          onClick={() => setMode("prediction")}
-        >
-          🎯 Over
-        </button>
-        <button
-          className={`btn-primary ${mode === "trivia" ? "active" : ""}`}
-          onClick={() => setMode("trivia")}
-        >
-          🧠 Timeout
-        </button>
-      </div>
-
-      {/* ADD FORM */}
       {editingId === "new" && (
-        <div className="card">
-          <p className="section-title">New Question</p>
+        <div className="card form-card slide-down">
+          <h2 className="section-title">Create New Question</h2>
           <QuestionForm
             form={form}
             setForm={setForm}
@@ -581,130 +655,129 @@ export default function App() {
         </div>
       )}
 
-      {/* LOADING */}
       {loading && (
-        <div className="card" style={{ textAlign: "center", color: "#94a3b8" }}>
-          Loading questions…
+        <div className="empty-state">
+          <div className="loader"></div>
+          <p>Loading questions…</p>
         </div>
       )}
 
-      {/* QUESTIONS LIST */}
       {!loading && filteredQuestions.length === 0 && editingId !== "new" && (
-        <div className="card" style={{ textAlign: "center", color: "#94a3b8" }}>
-          No questions found.
+        <div className="empty-state">
+          <p className="empty-icon">📭</p>
+          <h3>No questions found</h3>
+          <p>Try adjusting your search or add a new question.</p>
         </div>
       )}
 
-      {filteredQuestions.map((q) => {
-        const isEditing = editingId === q.id;
-        const isAddingToMatch = addToMatchId === q.id;
+      <div className="questions-list">
+        {filteredQuestions.map((q) => {
+          const isEditing = editingId === q.id;
+          const isAddingToMatch = addToMatchId === q.id;
 
-        return (
-          <div key={q.id} className="card">
-            {isEditing ? (
-              <>
-                <p className="section-title">Edit Question</p>
-                <QuestionForm
-                  form={form}
-                  setForm={setForm}
-                  onSave={handleSave}
-                  onCancel={() => setEditingId(null)}
-                />
-              </>
-            ) : (
-              <>
-                <h2 className="question">{q.question}</h2>
-
-                <div className="options">
-                  {[q.option1, q.option2, q.option3, q.option4]
-                    .filter(Boolean)
-                    .map((opt, i) => (
-                      <div
-                        key={i}
-                        className={`option-item ${
-                          q.correctOption === i + 1 ? "correct" : ""
-                        }`}
-                      >
-                        <span className="option-bullet">{i + 1}.</span> {opt}
-                        {q.correctOption === i + 1 && (
-                          <span className="correct-badge">✅</span>
-                        )}
-                      </div>
-                    ))}
-                </div>
-
-                <p className="meta">
-                  Innings: {q.innings || "—"} &nbsp;|&nbsp; Over:{" "}
-                  {q.over || "—"}
-                </p>
-
-                <div className="btn-row center">
-                  <button
-                    className="btn-edit"
-                    onClick={() => handleEdit(q)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn-danger"
-                    onClick={() => handleDelete(q.id)}
-                  >
-                    Delete
-                  </button>
-
-                  {/* Add to Match */}
-                  {isSample && (
-                    <button
-                      className="btn-add-match"
-                      onClick={() => {
-                        setAddToMatchId(isAddingToMatch ? null : q.id);
-                        setAddToMatchGameId("");
-                      }}
-                    >
-                      {isAddingToMatch ? "✕ Cancel" : "➕ Add to Match"}
-                    </button>
-                  )}
-                </div>
-
-                {/* Add-to-match dropdown */}
-                {isSample && isAddingToMatch && (
-                  <div className="add-to-match-panel">
-                    <p className="add-to-match-label">Select a match:</p>
-
-                    {games.length === 0 ? (
-                      <p style={{ color: "#94a3b8", fontSize: 13 }}>
-                        Loading matches…
-                      </p>
-                    ) : (
-                      <select
-                        className="input"
-                        value={addToMatchGameId}
-                        onChange={(e) => setAddToMatchGameId(e.target.value)}
-                      >
-                        <option value="">— choose match —</option>
-                        {games.map((g) => (
-                          <option key={g.id} value={g.id}>
-                            {g.name}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-
-                    <button
-                      className="btn-success"
-                      disabled={!addToMatchGameId || addToMatchLoading}
-                      onClick={() => handleAddToMatch(q)}
-                      style={{ marginTop: 8 }}
-                    >
-                      {addToMatchLoading ? "Adding…" : "Confirm Add"}
-                    </button>
+          return (
+            <div key={q.id} className={`card question-card ${isEditing ? "editing" : ""}`}>
+              {isEditing ? (
+                <>
+                  <h2 className="section-title">Edit Question</h2>
+                  <QuestionForm
+                    form={form}
+                    setForm={setForm}
+                    onSave={handleSave}
+                    onCancel={() => setEditingId(null)}
+                  />
+                </>
+              ) : (
+                <>
+                  <div className="card-header">
+                    <div className="meta-tags">
+                      <span className="tag">Innings {q.innings || "—"}</span>
+                      <span className="tag tag-accent">Over {q.over || "—"}</span>
+                    </div>
                   </div>
-                )}
-              </>
-            )}
-          </div>
-        );
-      })}
+
+                  <h3 className="question-text">{q.question}</h3>
+
+                  <div className="options-layout">
+                    {[q.option1, q.option2, q.option3, q.option4]
+                      .filter(Boolean)
+                      .map((opt, i) => (
+                        <div
+                          key={i}
+                          className={`option-display ${
+                            q.correctOption === i + 1 ? "is-correct" : ""
+                          }`}
+                        >
+                          <span className="option-letter">{String.fromCharCode(65 + i)}</span> 
+                          <span className="option-value">{opt}</span>
+                          {q.correctOption === i + 1 && (
+                            <span className="check-icon">✓</span>
+                          )}
+                        </div>
+                      ))}
+                  </div>
+
+                  <div className="card-footer">
+                    <div className="action-buttons">
+                      <button className="btn-icon edit" onClick={() => handleEdit(q)}>
+                        ✏️ Edit
+                      </button>
+                      <button className="btn-icon delete" onClick={() => handleDelete(q.id)}>
+                        🗑️ Delete
+                      </button>
+                    </div>
+
+                    {isSample && (
+                      <div className="match-assignment">
+                        <button
+                          className={`btn-assign ${isAddingToMatch ? "cancel" : ""}`}
+                          onClick={() => {
+                            setAddToMatchId(isAddingToMatch ? null : q.id);
+                            setAddToMatchGameId("");
+                          }}
+                        >
+                          {isAddingToMatch ? "Cancel" : "➕ Add to Match"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {isSample && isAddingToMatch && (
+                    <div className="add-to-match-panel slide-down">
+                      <label>Select match destination:</label>
+                      <div className="match-select-row">
+                        {games.length === 0 ? (
+                          <span className="loading-text">Loading matches…</span>
+                        ) : (
+                          <select
+                            className="input"
+                            value={addToMatchGameId}
+                            onChange={(e) => setAddToMatchGameId(e.target.value)}
+                          >
+                            <option value="">— Choose a match —</option>
+                            {games.map((g) => (
+                              <option key={g.id} value={g.id}>
+                                {g.name}
+                              </option>
+                            ))}
+                          </select>
+                        )}
+                        <button
+                          className="btn-success"
+                          disabled={!addToMatchGameId || addToMatchLoading}
+                          onClick={() => handleAddToMatch(q)}
+                        >
+                          {addToMatchLoading ? "..." : "Confirm"}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
