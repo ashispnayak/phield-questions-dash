@@ -41,6 +41,34 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* ─── CUSTOM LOGO STYLING ───────────────────────────────────────────── */
+.app-logo {
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(255, 180, 130, 0.15));
+}
+
+.app-logo.large {
+  height: 60px;
+  margin-bottom: 8px;
+}
+
+.app-logo.small {
+  height: 32px;
+  margin-top: 4px;
+}
+
+/* Fallback text styles in case logo fails or is not used */
+.logo-text {
+  font-size: 36px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.logo-text.small {
+  font-size: 24px;
+}
+
 /* ─── LAYOUT ───────────────────────────────────────────────────────────── */
 .app-container {
   max-width: 720px;
@@ -56,32 +84,6 @@ body {
   flex-direction: column;
   align-items: center;
   gap: 8px;
-}
-
-.logo-badge {
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 24px;
-  font-weight: 800;
-  color: white;
-  margin-bottom: 12px;
-  box-shadow: var(--shadow-glow);
-}
-
-.logo-text {
-  font-size: 36px;
-  font-weight: 800;
-  margin: 0;
-  letter-spacing: -0.02em;
-}
-
-.logo-text.small {
-  font-size: 24px;
 }
 
 .subtitle {
@@ -791,20 +793,16 @@ button:disabled {
 
 /* ─── MOBILE RESPONSIVENESS OVERHAUL ───────────────────────────────────── */
 @media (max-width: 600px) {
-  /* Tighter outer padding to save screen space */
   .app-container {
     padding: 20px 16px;
   }
 
-  /* Reduce massive desktop typography */
   .logo-text { font-size: 28px; }
   .logo-text.small { font-size: 20px; }
   
-  /* Shrink card padding */
   .card { padding: 16px; }
   .question-card.editing { padding: 16px; }
   
-  /* Form elements stack smoothly */
   .row-group {
     grid-template-columns: 1fr;
   }
@@ -813,7 +811,6 @@ button:disabled {
     grid-template-columns: 1fr;
   }
   
-  /* Adjust header layout so buttons don't clip */
   .inline-header {
     flex-direction: column;
     align-items: stretch;
@@ -838,7 +835,6 @@ button:disabled {
     width: 100%;
   }
 
-  /* Make filter row beautiful and touch-friendly */
   .controls-bar {
     flex-direction: column;
     align-items: stretch;
@@ -853,18 +849,15 @@ button:disabled {
     width: 100%;
   }
   
-  /* Tabs expand evenly across screen */
   .toggle-btn {
     flex: 1;
     text-align: center;
   }
 
-  /* Override desktop grid min-width */
   .game-grid {
     grid-template-columns: 1fr;
   }
 
-  /* Question Card Layout adjustments */
   .card-header, .options-layout, .card-footer { 
     padding-left: 16px; 
     padding-right: 16px; 
@@ -905,7 +898,6 @@ button:disabled {
     flex-direction: column;
   }
 
-  /* Pill selections stack into a clean grid */
   .pill-group {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -915,7 +907,6 @@ button:disabled {
     grid-column: span 2;
   }
   
-  /* Home nav cards adapt better */
   .nav-card {
     flex-direction: column;
     text-align: center;

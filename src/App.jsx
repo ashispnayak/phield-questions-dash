@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import logoImg from "./logo.png";
 
 const SAMPLE_GAME_ID = "3f17c641-77d5-4f22-a4bd-c2773c3de704";
 const BASE_URL = "https://tableplay-319702317581.asia-south1.run.app/v1";
@@ -165,7 +166,6 @@ export default function App() {
 
       setQuestions(
         data
-          // NEW: Filter out soft-deleted questions before mapping
           .filter((q) => q.isDeleted !== true)
           .map((q) => ({
             id: q.id,
@@ -406,8 +406,8 @@ export default function App() {
     return (
       <div className="app-container">
         <div className="header hero-header">
-          <div className="logo-badge">P</div>
-          <h1 className="logo-text">phield</h1>
+          {/* UPDATED LOGO IMAGE HERE */}
+          <img src={logoImg} alt="phield logo" className="app-logo large" />
           <p className="subtitle">Admin Control Center</p>
         </div>
 
@@ -549,14 +549,16 @@ export default function App() {
     <div className="app-container">
       <div className="header inline-header">
         <div className="header-titles">
-          <h1 className="logo-text small">phield</h1>
+          {/* UPDATED LOGO IMAGE HERE */}
+          <img src={logoImg} alt="phield logo" className="app-logo small" />
+          
           {!isSample && currentGameName && (
-            <div className="match-badges">
+            <div className="match-badges" style={{marginTop: "8px"}}>
               <span className="badge badge-primary">{currentGameName}</span>
               {currentGameCode && <span className="badge badge-secondary">ID: {currentGameCode}</span>}
             </div>
           )}
-          {isSample && <span className="badge badge-primary">Sample Bank</span>}
+          {isSample && <span className="badge badge-primary" style={{marginTop: "8px"}}>Sample Bank</span>}
         </div>
 
         <div className="header-actions">
